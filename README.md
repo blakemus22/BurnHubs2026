@@ -1,2 +1,2 @@
 # BurnHubs2026
-Code and datasets for final project learning about temporally dynamic contact networks with respect to infectious diseases.
+Code and datasets for final project learning about temporally dynamic contact networks with respect to infectious diseases. This project looks at the paper "Temporal contact patterns and the implications for predicting superspreaders and planning of targeted outbreak control" by Rachael Pung (2024). We implement dynamic contact networks to better understand how this concept changes the spread of an infection through a community
