@@ -10,6 +10,7 @@ library(fitdistrplus)
 library(colorspace)
 library(clue)
 library(fields)
+library(ggplot2)
 
 edges <- read_csv("~/Fall 2026/BurnHubs2026/edges.csv")
 nodes <- read_csv("~/Fall 2026/BurnHubs2026/nodes.csv")
@@ -154,3 +155,13 @@ mean_r_by_step$r_bar_dynam <- rand_next$mean_r_rand
 # now we can finally compute r_bar!
 mean_r_by_step$r_bar <- (mean_r_by_step$r_bar_temp - mean_r_by_step$r_bar_dynam)/(mean_r_by_step$r_bar_stat - mean_r_by_step$r_bar_dynam)
 
+
+ggplot(mean_r_by_step, aes(x = r_bar)) +
+  geom_density(fill = "purple", colour = "purple4", alpha = 0.5, linewidth = 0.8) +
+  geom_vline(aes(xintercept = median(r_bar, na.rm = TRUE)),
+             linetype = "dashed", linewidth = 0.8) +
+  xlim(0,1) +
+  labs(title = "Distribution of mean retained contacts per step",
+       x = expression(bar(r)),
+       y = "Density") +
+  theme_minimal(base_size = 14)
