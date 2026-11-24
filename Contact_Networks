@@ -92,7 +92,7 @@ contacts = load_contact_network(FILENAME)
 
 contacts = contacts[1:]
 
-history = outbreak_sim(contacts, beta=BETA, gamma=GAMMA, initial_infected=INITIAL_INFECTED)
+history = outbreak_sim(contacts, BETA, GAMMA, INITIAL_INFECTED)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
