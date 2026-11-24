@@ -99,3 +99,15 @@ large_contact_mat <- contacts_weight_sym2 %>%
               names_prefix = "j_",
               values_from = count)
 write.csv(large_contact_mat, "C:/Users/blake/Documents/Fall 2026/BurnHubs2026/copenhagen_contact_mat.csv", row.names = TRUE)
+
+# who are the superspreaders?
+large_contact_mat$contact_min <- rowSums(large_contact_mat[,3:682])
+
+contact_mins <- large_contact_mat %>%
+  dplyr::select(a,day, contact_min) %>%
+  group_by(a) %>%
+  summarise(total_min = sum(contact_min)) %>%
+  ungroup()
+
+
+write_csv(contact_mins, "C:/Users/blake/Documents/Fall 2026/BurnHubs2026/contact_mins.csv")
