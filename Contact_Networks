@@ -1,13 +1,11 @@
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 # INPUTS
 
 FILENAME = "copenhagen_contact_mat.csv"
-BETA = 1
+p = 0.5 # Probability of transmission: Beta = p*C
 GAMMA = 0.2
 INITIAL_INFECTED = 5
 
@@ -34,7 +32,7 @@ def load_contact_network(filename):
     return contacts
 
 
-def outbreak_sim(contacts,beta,gamma,initial_infected):
+def outbreak_sim(contacts,p,gamma,initial_infected):
 
     rng = np.random.default_rng()
 
@@ -52,7 +50,7 @@ def outbreak_sim(contacts,beta,gamma,initial_infected):
     state[initial_ids] = 1
     infection_day[initial_ids] = 0
 
-    recovery_time[initial_ids] = rng.exponential(scale = 1/gamma, size=initial_infected)
+    recovery_time[initial_ids] = 1/gamma #rng.exponential(scale = 1/gamma, size=initial_infected)
 
     records = []
 
@@ -68,31 +66,30 @@ def outbreak_sim(contacts,beta,gamma,initial_infected):
         infected = (state == 1)
         susceptible = (state == 0)
 
-        force_infection = beta * C[:, infected].sum(axis=1)
-        p_infection = 1 - np.exp(-force_infection)
+        beta = p * C[:, infected].sum(axis=1)
+        # p_infection = 1 - np.exp(-force_infection)
 
-        new_infections = (susceptible & (rng.random(N) < p_infection))
+        new_infections = (susceptible & (rng.random(N) < beta))
         state[new_infections] = 1
         infection_day[new_infections] = day + 1
-        
+
         new_recoveries = (infected & (recovery_time <= day + 1))
         state[new_recoveries] = 2
 
         n_new = np.count_nonzero(new_infections)
 
         if n_new > 0:
-            recovery_time[new_infections] = (day + 1 + rng.exponential(scale=1/gamma, size=n_new))
+            recovery_time[new_infections] = (day + 1/gamma + 1)
 
     history = pd.DataFrame(records)
 
     return history
 
-
 contacts = load_contact_network(FILENAME)
 
 contacts = contacts[1:]
 
-history = outbreak_sim(contacts, BETA, GAMMA, INITIAL_INFECTED)
+history = outbreak_sim(contacts, p, GAMMA, INITIAL_INFECTED)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -105,4 +102,3 @@ ax.legend()
 ax.grid()
 plt.tight_layout()
 plt.show()
-
