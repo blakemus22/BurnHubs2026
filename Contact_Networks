@@ -1,0 +1,108 @@
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+# INPUTS
+
+FILENAME = "copenhagen_contact_mat.csv"
+BETA = 1
+GAMMA = 0.2
+INITIAL_INFECTED = 5
+
+def load_contact_network(filename):
+
+    df = pd.read_csv(filename)
+
+    person_ids = np.sort(df["i"].unique())
+    days = np.sort(df["day"].unique())
+
+    contact_cols = [f"j_{i}" for i in person_ids]
+
+    N = len(person_ids)
+    contacts = np.zeros((len(days), N, N), dtype=float)
+
+    for k, day in enumerate(days):
+        daily = (df.loc[df["day"] == day].set_index("i").reindex(person_ids))
+
+        C = daily[contact_cols].to_numpy(dtype=float)
+        contacts[k] = C / 288
+
+        np.fill_diagonal(contacts[k], 0) # No self loops
+
+    return contacts
+
+
+def outbreak_sim(contacts,beta,gamma,initial_infected):
+
+    rng = np.random.default_rng()
+
+    D, N, N2 = contacts.shape
+
+    max_days = D
+
+    state = np.zeros(N, dtype=int) # 0 is sus, 1 is infected, 2 is recovered
+
+    infection_day = np.full(N, np.nan)
+    recovery_time = np.full(N, np.nan)
+
+    initial_ids = rng.choice(N, size=initial_infected)
+
+    state[initial_ids] = 1
+    infection_day[initial_ids] = 0
+
+    recovery_time[initial_ids] = rng.exponential(scale = 1/gamma, size=initial_infected)
+
+    records = []
+
+    for day in range(max_days + 1):
+
+        records.append({ "day": day,"S": np.sum(state == 0),"I": np.sum(state == 1),"R": np.sum(state == 2)})
+
+        if day == max_days:
+            break
+
+        C = contacts[day]
+
+        infected = (state == 1)
+        susceptible = (state == 0)
+
+        force_infection = beta * C[:, infected].sum(axis=1)
+        p_infection = 1 - np.exp(-force_infection)
+
+        new_infections = (susceptible & (rng.random(N) < p_infection))
+        state[new_infections] = 1
+        infection_day[new_infections] = day + 1
+        
+        new_recoveries = (infected & (recovery_time <= day + 1))
+        state[new_recoveries] = 2
+
+        n_new = np.count_nonzero(new_infections)
+
+        if n_new > 0:
+            recovery_time[new_infections] = (day + 1 + rng.exponential(scale=1/gamma, size=n_new))
+
+    history = pd.DataFrame(records)
+
+    return history
+
+
+contacts = load_contact_network(FILENAME)
+
+contacts = contacts[1:]
+
+history = outbreak_sim(contacts, beta=BETA, gamma=GAMMA, initial_infected=INITIAL_INFECTED)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+ax.plot(history["day"], history["S"], label="Susceptible")
+ax.plot(history["day"], history["I"], label="Infected")
+ax.plot(history["day"], history["R"], label="Recovered")
+
+ax.set(xlabel="Day", ylabel="Number of individuals", title="Dynamic Copenhagen Network (1 Sim)")
+ax.legend()
+ax.grid()
+plt.tight_layout()
+plt.show()
+
