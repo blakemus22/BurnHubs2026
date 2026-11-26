@@ -28,6 +28,11 @@ edges <- edges %>%
   rename(j = target) %>% 
   dplyr::filter(rssi >= median(rssi))
 
+
+edges2 <- edges %>%
+  filter(i != j) %>%
+  mutate(a = pmin(i, j), b = pmax(i, j), ts = as.numeric(timestamp)) %>%
+  distinct(a, b, timestamp)
 ## I also want to structure the data following the methods of Pung et al.
 # set a time step based on the median contact delay.
 contacts <- edges %>%

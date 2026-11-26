@@ -60,6 +60,12 @@ contacts_steps <- contacts2 %>%
          step_begin = (step - 1) * step_len,
          step_stop  = step_begin + step_len) %>%
   dplyr::select(i = a, j = b, step)
+
+unique_nodes <- contacts_steps %>%
+  group_by(step) %>%
+  summarise(tot_nodes = n_distinct(c(i,j))) %>%
+  ungroup()
+mean(unique_nodes$tot_nodes)
 # here, we process the data to calculate r_bar:
 # make contacts symmetric:
 edges_sym <- bind_rows(
@@ -161,7 +167,10 @@ ggplot(mean_r_by_step, aes(x = r_bar)) +
   geom_vline(aes(xintercept = median(r_bar, na.rm = TRUE)),
              linetype = "dashed", linewidth = 0.8) +
   xlim(0,1) +
-  labs(title = "Distribution of mean retained contacts per step",
-       x = expression(bar(r)),
+  labs(x = expression(bar(r)),
        y = "Density") +
-  theme_minimal(base_size = 14)
+  theme_minimal(base_size = 14) +
+  theme(axis.text = element_text(size = 18),
+        axis.text.y = element_blank())
+
+    
