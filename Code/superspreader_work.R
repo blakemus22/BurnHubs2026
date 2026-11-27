@@ -141,16 +141,37 @@ prop_df <- data.frame(
 prop_df$prop_real[prop_df$prop_real == 0] <- NA
 prop_df$prop_low[prop_df$prop_low == 0] <- NA
 prop_df$prop_high[prop_df$prop_high == 0] <- NA
+## didn't end up using these, I don't like them
 
+# what static network would the data compare to?
+num80 <- p80 %>%
+  group_by(step) %>%
+  summarise(top_nodes = n()) %>%
+  ungroup()
+mean(num80$top_nodes)/680
 
 ggplot(prop_df) +
-  geom_line(aes(x = prop_real, y = threshold), colour = "purple", linewidth = 1.5, alpha = 0.8) +
- ylim(0,1) + 
+  geom_line(aes(x = prop_real, y = threshold, color = "Copenhagen Network"), linewidth = 1.8, alpha = 0.8) +
+  ylim(0,1) + 
   xlim(0,1) +
+  geom_segment(aes(
+    x = 0, xend = .13,   # Start and end on x-axis
+    y = 1, yend = 1,     # Keep y and yend identical for a horizontal line
+    color = "Static Network Reference"),
+    linewidth = 1.5,
+    linetype = "dotted"
+  ) + 
+  geom_segment(aes(
+    x = 0.13, xend = .13,   # Start and end on x-axis
+    y = 1, yend = 0,     # Keep y and yend identical for a horizontal line
+    color = "Static Network Reference"),
+    linewidth = 1.5,
+    linetype = "dotted"
+  ) + 
   labs(title = "",
        x = "Proportion of Nodes",
        y = "Proportion of Steps") +
+  scale_color_manual(name = "",
+                     values = c("Copenhagen Network" = "purple", "Static Network Reference" = "grey")) +
   theme_minimal(base_size = 14) + 
   theme(aspect.ratio = 1)
-
-
